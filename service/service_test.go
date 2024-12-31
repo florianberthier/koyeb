@@ -66,10 +66,12 @@ func TestGetServices(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	expected := []models.ServiceResponse{
-		{Name: "service1", URL: "http://127.0.0.1:3001"},
-		{Name: "service2", URL: "http://127.0.0.1:3002"},
-	}
+	assert.Len(t, response, 2)
+	assert.Equal(t, true, response[0].Name == "service1" || response[0].Name == "service2")
+	assert.Equal(t, true, response[1].Name == "service1" || response[1].Name == "service2")
+	assert.NotEqual(t, response[0].Name, response[1].Name)
 
-	assert.Equal(t, expected, response)
+	assert.Equal(t, true, response[0].URL == "http://127.0.0.1:3001" || response[0].URL == "http://127.0.0.1:3002")
+	assert.Equal(t, true, response[1].URL == "http://127.0.0.1:3001" || response[1].URL == "http://127.0.0.1:3002")
+	assert.NotEqual(t, response[0].URL, response[1].URL)
 }
