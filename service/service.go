@@ -60,3 +60,15 @@ func (s *Service) CreateService(c *gin.Context) {
 		URL: fmt.Sprintf("http://127.0.0.1:%d", port),
 	})
 }
+
+func (s *Service) GetServices(c *gin.Context) {
+	response := []models.ServiceResponse{}
+	for name, port := range s.Jobs {
+		response = append(response, models.ServiceResponse{
+			Name: name,
+			URL:  fmt.Sprintf("http://127.0.0.1:%d", port),
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}

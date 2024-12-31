@@ -1,6 +1,8 @@
 package service
 
 import (
+	"encoding/json"
+	"koyeb/models"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -41,4 +43,33 @@ func TestCreateService(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	})
+}
+
+func TestGetServices(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	service := &Service{
+		Jobs: map[string]int{
+			"service1": 3001,
+			"service2": 3002,
+		},
+	}
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	service.GetServices(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	response := []models.ServiceResponse{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+
+	expected := []models.ServiceResponse{
+		{Name: "service1", URL: "http://127.0.0.1:3001"},
+		{Name: "service2", URL: "http://127.0.0.1:3002"},
+	}
+
+	assert.Equal(t, expected, response)
 }

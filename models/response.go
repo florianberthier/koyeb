@@ -5,7 +5,6 @@ type CreateServiceResponse struct {
 }
 
 type ServiceResponse struct {
-	ID     string `json:"id"`
-	URL    string `json:"url"`
-	Status string `json:"status"`
+	Name string `json:"name"`
+	URL  string `json:"url"`
 }
