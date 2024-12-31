@@ -11,6 +11,7 @@ import (
 
 func TestCreateNomadJobNoScript(t *testing.T) {
 	name := "test-job"
+
 	content := []byte("<html><body>Test</body></html>")
 
 	job, err := createNomadJob(name, false, content)
