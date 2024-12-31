@@ -8,23 +8,24 @@ import (
 	"github.com/hashicorp/nomad/api"
 )
 
-func (s *Service) createNomadJob(name string, script bool, content []byte) (*api.Job, error) {
+func createNomadJob(name string, script bool, content []byte) (*api.Job, error) {
 	taskName := "nginx"
 
-	tmpDir, err := os.MkdirTemp("", "nginx-content")
+	tmpDirPath := filepath.Join("/tmp", name)
+	err := os.Mkdir(tmpDirPath, os.ModePerm)
 	if err != nil {
 		return nil, fmt.Errorf("error creating temp dir: %v", err)
 	}
 
 	contentPath := ""
-	volume := fmt.Sprintf("%s:/usr/share/nginx/html", tmpDir)
+	volume := tmpDirPath + ":/usr/share/nginx/html"
 	perm := os.FileMode(0644)
 	if script {
-		contentPath = filepath.Join(tmpDir, "index.sh")
+		contentPath = filepath.Join(tmpDirPath, "index.sh")
 		perm = os.FileMode(0755)
 		volume = fmt.Sprintf("%s:/tmp/index.sh", contentPath)
 	} else {
-		contentPath = filepath.Join(tmpDir, "index.html")
+		contentPath = filepath.Join(tmpDirPath, "index.html")
 	}
 
 	err = os.WriteFile(contentPath, content, perm)

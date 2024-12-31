@@ -52,7 +52,7 @@ func (s *Service) CreateService(c *gin.Context) {
 		return
 	}
 
-	job, err := s.createNomadJob(name, request.Script, content)
+	job, err := createNomadJob(name, request.Script, content)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error creating Nomad job: %v", err)})
 		return
