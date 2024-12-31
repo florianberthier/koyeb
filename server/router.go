@@ -11,6 +11,4 @@ func SetupRouter(r *gin.Engine) {
 
 	r.PUT("/services/:name", s.CreateService)
 	r.POST("/services/:name", s.CreateService)
-
-	r.GET("/allocations", s.GetAllocations)
 }

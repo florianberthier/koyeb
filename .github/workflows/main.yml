@@ -1,0 +1,29 @@
+name: Run Tests on All Branches
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Go environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.22' 
+
+      - name: Install dependencies
+        run: |
+          make setup
+
+      - name: Run tests
+        run: make test

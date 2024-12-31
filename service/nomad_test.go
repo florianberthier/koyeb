@@ -14,7 +14,7 @@ func TestCreateNomadJobNoScript(t *testing.T) {
 
 	content := []byte("<html><body>Test</body></html>")
 
-	job, err := createNomadJob(name, false, content)
+	job, err := createNomadJob(name, false, content, 20676)
 
 	require.NoError(t, err)
 	assert.NotNil(t, job)
@@ -35,7 +35,7 @@ func TestCreateNomadJobWithScript(t *testing.T) {
 	name := "test-job-script"
 	content := []byte("#!/bin/sh\necho 'Hello World!'")
 
-	job, err := createNomadJob(name, true, content)
+	job, err := createNomadJob(name, true, content, 20676)
 
 	require.NoError(t, err)
 	assert.NotNil(t, job)

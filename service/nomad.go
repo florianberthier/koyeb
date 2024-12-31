@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/nomad/api"
 )
 
-func createNomadJob(name string, script bool, content []byte) (*api.Job, error) {
+func createNomadJob(name string, script bool, content []byte, port int) (*api.Job, error) {
 	taskName := "nginx"
 
 	tmpDirPath := filepath.Join("/tmp", name)
@@ -50,7 +50,7 @@ func createNomadJob(name string, script bool, content []byte) (*api.Job, error) 
 						ReservedPorts: []api.Port{
 							{
 								Label: "http",
-								Value: 20676,
+								Value: port,
 								To:    80,
 							},
 						},

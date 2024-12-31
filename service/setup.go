@@ -10,6 +10,7 @@ import (
 type Service struct {
 	Validator   *validator.Validate
 	NomadClient *api.Client
+	Jobs        map[string]int
 }
 
 func Setup() *Service {
@@ -23,5 +24,6 @@ func Setup() *Service {
 	return &Service{
 		Validator:   validator.New(),
 		NomadClient: client,
+		Jobs:        map[string]int{},
 	}
 }

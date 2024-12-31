@@ -2,31 +2,12 @@ package service
 
 import (
 	"fmt"
-	"io"
 	"koyeb/models"
+	"koyeb/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
-func fetch(url string) ([]byte, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch URL: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	return body, nil
-}
 
 func (s *Service) CreateService(c *gin.Context) {
 	var request models.CreateServiceRequest
@@ -46,58 +27,36 @@ func (s *Service) CreateService(c *gin.Context) {
 		return
 	}
 
-	content, err := fetch(request.URL)
+	content, err := utils.Fetch(request.URL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to fetch content: %v", err)})
 		return
 	}
 
-	job, err := createNomadJob(name, request.Script, content)
+	port, ok := s.Jobs[name]
+	if !ok {
+		port, err = utils.GetRandomPort(3001, 4000)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error getting available port: %v", err)})
+			return
+		}
+
+		s.Jobs[name] = port
+	}
+
+	job, err := createNomadJob(name, request.Script, content, port)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error creating Nomad job: %v", err)})
 		return
 	}
 
-	nomadResp, _, err := s.NomadClient.Jobs().Register(job, nil)
+	_, _, err = s.NomadClient.Jobs().Register(job, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error registering job: %v", err)})
 		return
 	}
 
-	// wait for the job to be running
-
-	fmt.Printf("Created service: %+v\n", *nomadResp)
-
 	c.JSON(http.StatusOK, models.CreateServiceResponse{
-		URL: "http://127.0.0.1:80",
+		URL: fmt.Sprintf("http://127.0.0.1:%d", port),
 	})
-}
-
-func (s *Service) GetAllocations(c *gin.Context) {
-	allocs, _, err := s.NomadClient.Allocations().List(nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error fetching allocations: %v", err)})
-		return
-	}
-	response := []models.ServiceResponse{}
-	for _, alloc := range allocs {
-		allocInfo, _, err := s.NomadClient.Allocations().Info(alloc.ID, nil)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error fetching allocation info: %v", err)})
-			return
-		}
-
-		if len(allocInfo.Resources.Networks) == 0 {
-			fmt.Println("No network resources found for allocation, skipping")
-			continue
-		}
-
-		response = append(response, models.ServiceResponse{
-			ID:     alloc.ID,
-			URL:    fmt.Sprintf("http://%s:80", allocInfo.Resources.Networks[0].IP),
-			Status: allocInfo.ClientStatus,
-		})
-	}
-
-	c.JSON(http.StatusOK, response)
 }
